@@ -1,44 +1,44 @@
 const express = require("express");
 const axios = require("axios");
-const fs = require("fs");
-const path = require("path"); 
-
+const mysql = require("mysql");
 
 const app = express();
 const PORT = process.env.PORT || 3078;
 const url = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.1/dados?formato=json";
-const jsonFilePath = path.join(__dirname, "cotacao_dolar.json");
 
-app.get("/cotacaodolar", (req, res) =>{
-  try {
-    const cotacaodolar = JSON.parse(fs.readFileSync(jsonFilePath));
-    res.json(cotacaodolar);
-  } catch (error) {
-    console.error("Erro ao ler o arquivo JSON:", error);
-    res.status(500).json({ error: "Erro ao ler o arquivo JSON" });
-  }
-})
+// Configuração para conexão com o banco de dados MySQL
+const connection = mysql.createConnection({
+  host: "7875",
+  user: "mega",
+  password: "megamega",
+  database: "OCPDB755"
+});
 
-function inicializarArquivoJSON() {
-  try {
-    if (!fs.existsSync(jsonFilePath)) {
-      fs.writeFileSync(jsonFilePath, "[]");
+// Função para criar a tabela no banco de dados se ainda não existir
+function criarTabela() {
+  const query = `
+    CREATE TABLE IF NOT EXISTS cotacao_dolar (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      valor DECIMAL(10, 2),
+      data TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `;
+  
+  connection.query(query, (error) => {
+    if (error) {
+      console.error("Erro ao criar a tabela no banco de dados:", error);
+    } else {
+      console.log("Tabela criada com sucesso (ou já existente).");
     }
-  } catch (error) {
-    console.error("Erro ao inicializar o arquivo JSON:", error);
-  }
+  });
 }
 
-
-inicializarArquivoJSON();
-
-
-
-async function obterCotacaoDolarPTAXVenda() {
+// Função para obter a cotação do dólar e salvar no banco de dados
+async function obterCotacaoDolar() {
   try {
     const response = await axios.get(url);
     const dados = response.data;
-    const dataAtual = new Date().toLocaleDateString(); 
+    const dataAtual = new Date().toISOString().slice(0, 19).replace('T', ' ');
 
     let valorEncontrado = null;
 
@@ -49,32 +49,36 @@ async function obterCotacaoDolarPTAXVenda() {
       } 
     }
 
-    for (let o = dados.length - 1; o >= 0; o--) {
-      if (dataAtual !== dados[o].data) {
-        valorEncontrado = dados[o].valor;
-        break;
-      } 
-    }
-    
     if (valorEncontrado !== null) {
-      const resultado = { Valor: valorEncontrado };
-      const jsonResultado = JSON.stringify(resultado);
-
-      const dadosSalvos = JSON.parse(fs.readFileSync(jsonFilePath));
-      dadosSalvos.push(resultado);
-      fs.writeFileSync(jsonFilePath, JSON.stringify(dadosSalvos, null, 2));
+      const query = `INSERT INTO cotacao_dolar (valor) VALUES (${valorEncontrado})`;
+      
+      connection.query(query, (error) => {
+        if (error) {
+          console.error("Erro ao inserir a cotação no banco de dados:", error);
+        } else {
+          console.log("Cotação inserida no banco de dados com sucesso.");
+        }
+      });
     } else {
-      console.log(JSON.stringify({ error: "Cotação não encontrada para a data atual." }));
+      console.log("Cotação não encontrada para a data atual.");
     }
   } catch (error) {
     console.error("Erro ao obter a cotação:", error);
   }
 }
 
+// Inicialização: criação da tabela e início da obtenção periódica da cotação
+criarTabela();
+setInterval(obterCotacaoDolar, 5000);
 
-setInterval(obterCotacaoDolarPTAXVenda, 5000);
-
+// Inicia o servidor Express
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
 });
+
+
+
+
+
+
 
