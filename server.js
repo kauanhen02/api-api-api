@@ -3,8 +3,9 @@ const axios = require("axios");
 const fs = require("fs");
 const path = require("path"); 
 
+
 const app = express();
-const PORT = process.env.PORT || 3077;
+const PORT = process.env.PORT || 3078;
 const url = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.1/dados?formato=json";
 const jsonFilePath = path.join(__dirname, "cotacao_dolar.json");
 
@@ -28,13 +29,16 @@ function inicializarArquivoJSON() {
   }
 }
 
+
 inicializarArquivoJSON();
+
+
 
 async function obterCotacaoDolarPTAXVenda() {
   try {
     const response = await axios.get(url);
     const dados = response.data;
-    const dataAtual = new Date().toLocaleDateString();
+    const dataAtual = new Date().toLocaleDateString(); 
 
     let valorEncontrado = null;
 
@@ -67,9 +71,10 @@ async function obterCotacaoDolarPTAXVenda() {
   }
 }
 
+
 setInterval(obterCotacaoDolarPTAXVenda, 5000);
 
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
 });
-z
+
