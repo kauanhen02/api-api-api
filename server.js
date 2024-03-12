@@ -71,10 +71,10 @@ function obterCotacaoDolarPTAXVenda() {
 
 function esperando() {
   const horaAtual = new Date().getHours();
-  if (horaAtual === 10) {
+  if (horaAtual === 6) {
     obterCotacaoDolarPTAXVenda();
   }
-  setTimeout(esperando, 60000); // Verifica a cada minuto
+  setTimeout(esperando, 600000); // Verifica a cada minuto
 }
 
 esperando();
