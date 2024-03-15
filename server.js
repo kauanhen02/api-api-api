@@ -10,7 +10,7 @@ const jsonFilePath = path.join(__dirname, "cotacao_dolar.json");
 
 app.get("/cotacaodolar", (req, res) => {
   try {
-    // Leia o arquivo JSON sempre que uma solicitação é feita
+    
     const cotacaodolar = JSON.parse(fs.readFileSync(jsonFilePath));
     res.json(cotacaodolar);
   } catch (error) {
@@ -74,7 +74,7 @@ function esperando() {
   if (horaAtual === 6) {
     obterCotacaoDolarPTAXVenda();
   }
-  setTimeout(esperando, 600000); // Verifica a cada minuto
+  setTimeout(esperando, 600000); 
 }
 
 esperando();
