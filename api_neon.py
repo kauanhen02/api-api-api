@@ -3,7 +3,7 @@ import psycopg2
 
 app = FastAPI(
     title="Quitzau API",
-    description="API de produtos com paginação conectada ao banco Neon",
+    description="API de produtos paginados e ordenados conectada ao banco Neon",
     version="1.0.0",
     docs_url="/docs",
     openapi_url="/openapi.json"
@@ -20,7 +20,7 @@ def get_conn():
     )
 
 @app.get("/produtos")
-def listar_produtos(page: int = Query(1, ge=1), page_size: int = Query(20, ge=1, le=100)):
+def listar_produtos(page: int = Query(1, ge=1), page_size: int = Query(100, ge=1, le=100)):
     offset = (page - 1) * page_size
 
     conn = get_conn()
@@ -29,7 +29,7 @@ def listar_produtos(page: int = Query(1, ge=1), page_size: int = Query(20, ge=1,
     cur.execute("""
         SELECT pro_in_codigo, pro_st_descricao, re_custo
         FROM produtos
-        ORDER BY pro_in_codigo
+        ORDER BY pro_in_codigo ASC
         LIMIT %s OFFSET %s
     """, (page_size, offset))
 
@@ -38,6 +38,10 @@ def listar_produtos(page: int = Query(1, ge=1), page_size: int = Query(20, ge=1,
     conn.close()
 
     return [
-        {"codigo": r[0], "descricao": r[1], "custo": float(r[2])}
-        for r in resultados
+        {
+            "codigo": row[0],
+            "descricao": row[1],
+            "custo": float(row[2])
+        }
+        for row in resultados
     ]
