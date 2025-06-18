@@ -1,10 +1,8 @@
-from fastapi import FastAPI, Query
+from fastapi import FastAPI
 import psycopg2
-import os
 
 app = FastAPI()
 
-# Configuração da conexão com o Neon
 def get_conn():
     return psycopg2.connect(
         host="ep-silent-moon-acmr3exh-pooler.sa-east-1.aws.neon.tech",
@@ -16,17 +14,18 @@ def get_conn():
     )
 
 @app.get("/produtos")
-def buscar_produtos(descricao: str = Query(..., description="Descrição do produto")):
+def listar_todos_produtos():
     conn = get_conn()
     cur = conn.cursor()
     cur.execute("""
         SELECT pro_in_codigo, pro_st_descricao, re_custo
         FROM produtos
-        WHERE pro_st_descricao ILIKE %s
-    """, (descricao,))
+    """)
     
-    rows = cur.fetchall()
+    resultados = cur.fetchall()
     cur.close()
     conn.close()
-    
-    return [{"codigo": r[0], "descricao": r[1], "custo": float(r[2])} for r in rows]
+
+    return [
+        {"codigo": r[0], "descricao": r[1], "custo": float(r[2])} for r in resultados
+    ]
