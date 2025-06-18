@@ -3,13 +3,12 @@ import psycopg2
 
 app = FastAPI(
     title="Quitzau API",
-    description="API de produtos conectada ao banco Neon com filtro fixo para BAMBOO",
+    description="API de produtos conectada ao banco Neon, retorna todos os produtos",
     version="1.0.0",
     docs_url="/docs",
-    openapi_url="/openapi.json"  # Necessário para o ChatGPT reconhecer
+    openapi_url="/openapi.json"
 )
 
-# Função para conectar ao banco PostgreSQL da Neon
 def get_conn():
     return psycopg2.connect(
         host="ep-silent-moon-acmr3exh-pooler.sa-east-1.aws.neon.tech",
@@ -20,16 +19,14 @@ def get_conn():
         sslmode="require"
     )
 
-# Endpoint que retorna os produtos com descrição "BAMBOO"
 @app.get("/produtos")
-def listar_produtos_bamboo():
+def listar_todos_produtos():
     conn = get_conn()
     cur = conn.cursor()
 
     cur.execute("""
         SELECT pro_in_codigo, pro_st_descricao, re_custo
         FROM produtos
-        WHERE pro_st_descricao ILIKE 'BAMBOO'
     """)
 
     resultados = cur.fetchall()
